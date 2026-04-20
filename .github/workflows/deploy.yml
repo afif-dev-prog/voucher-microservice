@@ -1,0 +1,25 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Publish
+        run: dotnet publish -c Release
+
+      - name: Deploy
+        run: |
+          cp -r bin/Release/net10.0/publish/* /var/www/app/fvs/
+          sudo systemctl restart kestrel-fvs
