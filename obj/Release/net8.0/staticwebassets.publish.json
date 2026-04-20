@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "0+c6njy4gvit8Ft0gyHAiVNCQv+76nx5Sb0QqJu6xgw=",
+  "Source": "voucherMicroservice",
+  "BasePath": "_content/voucherMicroservice",
+  "Mode": "Default",
+  "ManifestType": "Publish",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
