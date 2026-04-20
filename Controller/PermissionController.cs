@@ -17,7 +17,7 @@ namespace voucherMicroservice.Controller
         public PermissionController(DataContext db) { _db = db; }
 
         // ── GET all permissions ───────────────
-        [HttpGet("/api/permissions/list")]
+        [HttpGet("/api/voucher/permissions/list")]
         public async Task<IActionResult> GetPermissions()
         {
             var perms = await _db.Permissions
