@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using voucherMicroservice.Data;
 using voucherMicroservice.Model;
 using voucherMicroservice.Services;
@@ -23,6 +24,54 @@ namespace voucherMicroservice.Controller
         {
             _authService = authService;
             _dataContext = dataContext;
+        }
+
+        [HttpGet("/api/voucher/auth/list")]
+        public async Task<IActionResult> GetAuthLogs(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 20,
+            [FromQuery] string search = "",
+            [FromQuery] string action = "",
+            [FromQuery] string userType = "")
+        {
+            var query = _dataContext.AuthLog.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+                query = query.Where(a =>
+                    a.user_id.ToLower().Contains(search) ||
+                    (a.ip_address != null && a.ip_address.Contains(search)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(action))
+                query = query.Where(a => a.action == action.ToUpper());
+
+            if (!string.IsNullOrWhiteSpace(userType))
+                query = query.Where(a => a.user_type == userType.ToUpper());
+
+            query = query.OrderByDescending(a => a.timestamp);
+
+            int total = await query.CountAsync();
+            var data = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                success = true,
+                data,
+                pagination = new
+                {
+                    totalCount = total,
+                    totalPages = (int)Math.Ceiling(total / (double)pageSize),
+                    currentPage = pageNumber,
+                    pageSize,
+                    hasPrevious = pageNumber > 1,
+                    hasNext = pageNumber < (int)Math.Ceiling(total / (double)pageSize)
+                }
+            });
         }
 
         // ── POST api/auth/login ───────────────
@@ -132,6 +181,168 @@ namespace voucherMicroservice.Controller
         public IActionResult Validate()
         {
             return Ok(new { success = true, valid = true });
+        }
+
+        [HttpGet("/api/voucher/auth/active-sessions")]
+        public async Task<IActionResult> GetActiveSessions(
+            [FromQuery] string? search = "",
+            [FromQuery] string? userType = "")
+        {
+            var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            // Get all LOGIN events
+            var loginQuery = _dataContext.AuthLog
+                .Where(a => a.action == "LOGIN" && a.session_id != null)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim().ToLower();
+                loginQuery = loginQuery.Where(a =>
+                    a.user_id.ToLower().Contains(search) ||
+                    (a.ip_address != null && a.ip_address.Contains(search)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(userType))
+                loginQuery = loginQuery.Where(a => a.user_type == userType.ToUpper());
+
+            var logins = await loginQuery
+                .OrderByDescending(a => a.timestamp)
+                .ToListAsync();
+
+            // Get blacklisted JTIs
+            var blacklistedJtis = await _dataContext.TokenBlacklist
+                .Select(t => t.jti)
+                .ToListAsync();
+
+            // Filter: not blacklisted + token not expired (8hr = 28800 seconds)
+            var activeSessions = logins
+                .Where(l =>
+                    !blacklistedJtis.Contains(l.session_id) &&
+                    (now - l.timestamp) < 28800)
+                .GroupBy(l => l.session_id)
+                .Select(g => g.First())
+                .ToList();
+
+            return Ok(new
+            {
+                success = true,
+                count = activeSessions.Count,
+                data = activeSessions
+            });
+        }
+
+        // ── POST kill session (blacklist token) ─
+        [HttpPost("/api/voucher/auth/kill-session/{sessionId}")]
+        public async Task<IActionResult> KillSession(
+            string sessionId,
+            [FromBody] KillSessionRequest request)
+        {
+            // Check if already blacklisted
+            var exists = await _dataContext.TokenBlacklist
+                .AnyAsync(t => t.jti == sessionId);
+
+            if (exists)
+                return Ok(new { success = false, message = "Session already terminated." });
+
+            // Find the login log for context
+            var loginLog = await _dataContext.AuthLog
+                .FirstOrDefaultAsync(a => a.session_id == sessionId && a.action == "LOGIN");
+
+            var now = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            // Blacklist the token
+            await _dataContext.TokenBlacklist.AddAsync(new TokenBlacklist
+            {
+                id = Guid.NewGuid().ToString(),
+                jti = sessionId,
+                user_id = loginLog?.user_id,
+                expires_at = now + 28800,
+                revoked_at = now
+            });
+
+            // Log the kill action
+            await _dataContext.AuthLog.AddAsync(new AuthLog
+            {
+                id = Guid.NewGuid().ToString(),
+                user_id = loginLog?.user_id ?? "unknown",
+                user_type = loginLog?.user_type ?? "UNKNOWN",
+                action = "SESSION_KILLED",
+                timestamp = now,
+                session_id = sessionId,
+                ip_address = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                user_agent = Request.Headers["User-Agent"].ToString()
+            });
+
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Session for {loginLog?.user_id} terminated successfully."
+            });
+        }
+
+        // ── POST kill all sessions for a user ─
+        [HttpPost("/api/voucher/auth/kill-all/{userId}")]
+        public async Task<IActionResult> KillAllSessions(
+            string userId,
+            [FromBody] KillSessionRequest request)
+        {
+            var now = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            // Get all active sessions for this user
+            var userSessions = await _dataContext.AuthLog
+                .Where(a => a.user_id == userId &&
+                            a.action == "LOGIN" &&
+                            a.session_id != null &&
+                            (now - a.timestamp) < 28800)
+                .Select(a => a.session_id!)
+                .Distinct()
+                .ToListAsync();
+
+            var blacklistedJtis = await _dataContext.TokenBlacklist
+                .Select(t => t.jti)
+                .ToListAsync();
+
+            var toKill = userSessions
+                .Where(s => !blacklistedJtis.Contains(s))
+                .ToList();
+
+            if (!toKill.Any())
+                return Ok(new { success = false, message = "No active sessions found." });
+
+            foreach (var jti in toKill)
+            {
+                await _dataContext.TokenBlacklist.AddAsync(new TokenBlacklist
+                {
+                    id = Guid.NewGuid().ToString(),
+                    jti = jti,
+                    user_id = userId,
+                    expires_at = now + 28800,
+                    revoked_at = now
+                });
+            }
+
+            // Log bulk kill
+            await _dataContext.AuthLog.AddAsync(new AuthLog
+            {
+                id = Guid.NewGuid().ToString(),
+                user_id = userId,
+                user_type = "UNKNOWN",
+                action = "ALL_SESSIONS_KILLED",
+                timestamp = now,
+                ip_address = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                user_agent = Request.Headers["User-Agent"].ToString()
+            });
+
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = $"{toKill.Count} session(s) terminated for {userId}."
+            });
         }
     }
 }
