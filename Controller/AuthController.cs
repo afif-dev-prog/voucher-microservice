@@ -26,7 +26,7 @@ namespace voucherMicroservice.Controller
         }
 
         // ── POST api/auth/login ───────────────
-        [HttpPost("login")]
+        [HttpPost("/api/voucher/auth/login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -61,7 +61,7 @@ namespace voucherMicroservice.Controller
         }
 
         // ── POST api/auth/logout ──────────────
-        [HttpPost("logout")]
+        [HttpPost("/api/voucher/auth/logout")]
         [Authorize]
         public async Task<IActionResult> Logout()
         {
@@ -102,7 +102,7 @@ namespace voucherMicroservice.Controller
         }
 
         // ── GET api/auth/me ───────────────────
-        [HttpGet("me")]
+        [HttpGet("/api/voucher/auth/me")]
         [Authorize]
         public IActionResult Me()
         {
@@ -127,7 +127,7 @@ namespace voucherMicroservice.Controller
         // ── POST api/auth/validate ────────────
         // Lightweight endpoint — Angular can call this
         // to check if token is still valid
-        [HttpPost("validate")]
+        [HttpPost("/api/voucher/auth/validate")]
         [Authorize]
         public IActionResult Validate()
         {
