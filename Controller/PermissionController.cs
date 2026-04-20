@@ -17,7 +17,7 @@ namespace voucherMicroservice.Controller
         public PermissionController(DataContext db) { _db = db; }
 
         // ── GET all permissions ───────────────
-        [HttpGet("/api/permissions/list")]
+        [HttpGet("/api/voucher/permissions/list")]
         public async Task<IActionResult> GetPermissions()
         {
             var perms = await _db.Permissions
@@ -28,7 +28,7 @@ namespace voucherMicroservice.Controller
         }
 
         // ── GET role permissions ──────────────
-        [HttpGet("/api/permissions/role/{role}")]
+        [HttpGet("/api/voucher/permissions/role/{role}")]
         public async Task<IActionResult> GetRolePermissions(string role)
         {
             var granted = await _db.RolePermissions
@@ -39,7 +39,7 @@ namespace voucherMicroservice.Controller
         }
 
         // ── PUT role permissions (replace all) ─
-        [HttpPut("/api/permissions/role/{role}")]
+        [HttpPut("/api/voucher/permissions/role/{role}")]
         public async Task<IActionResult> SetRolePermissions(
             string role, [FromBody] SetRolePermissionsRequest request)
         {
@@ -66,7 +66,7 @@ namespace voucherMicroservice.Controller
         }
 
         // ── GET user overrides ────────────────
-        [HttpGet("/api/permissions/user/{userId}")]
+        [HttpGet("/api/voucher/permissions/user/{userId}")]
         public async Task<IActionResult> GetUserPermissions(string userId)
         {
             var overrides = await _db.UserPermissions
@@ -90,7 +90,7 @@ namespace voucherMicroservice.Controller
         }
 
         // ── PUT user override ─────────────────
-        [HttpPut("/api/permissions/user/{userId}")]
+        [HttpPut("/api/voucher/permissions/user/{userId}")]
         public async Task<IActionResult> SetUserPermissions(
             string userId, [FromBody] SetUserPermissionsRequest request)
         {
@@ -118,7 +118,7 @@ namespace voucherMicroservice.Controller
         }
 
         // ── POST seed permissions ─────────────
-        [HttpPost("/api/permissions/seed")]
+        [HttpPost("/api/voucher/permissions/seed")]
         public async Task<IActionResult> SeedPermissions()
         {
             var existing = await _db.Permissions.AnyAsync();
