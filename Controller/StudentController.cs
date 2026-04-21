@@ -60,5 +60,11 @@ namespace voucherMicroservice.Controller
             System.Text.Json.JsonSerializer.Serialize(result.Pagination));
             return Ok(result);
         }
+
+        [HttpPost("/api/voucher/student/studentscantopay")]
+        public async Task<IActionResult> StudentScanToPay(string studentId, string sellerUsername, decimal? amount)
+        {
+            return Ok(await studentService.StudentScanToPay(studentId, sellerUsername, amount));
+        }
     }
 }

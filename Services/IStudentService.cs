@@ -14,5 +14,6 @@ namespace voucherMicroservice.Services
         Task<ResponseCustomModel<Student>> ViewBalance(string studentId);
         Task<ResponseCustomModel<List<PayHistory>>> TransactionHistory(string studentId);
         Task<PagedResult<PayHistory>> GetHistoryByStudentId(string studentId, PaginationParams paginationParams);
+        Task<ResponseCustomModel<string>> StudentScanToPay(string studentId, string sellerUsername, decimal? price);
     }
 }
