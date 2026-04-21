@@ -323,6 +323,131 @@ namespace voucherMicroservice.Services
             }
         }
 
+        public async Task<ResponseCustomModel<string>> StudentScanToPay(string studentId, string sellerUsername, decimal? price)
+        {
+
+            using var transaction = await dataContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                if (!await CheckExistStudent(studentId))
+                {
+                    rc.Success = false;
+                    rc.Message = "Student not exist!";
+                }
+
+
+                if (!await CheckStudentBalance(studentId, price))
+                {
+                    rc.Success = false;
+                    rc.Message = "Insufficient Balance!";
+                }
+
+                if (!await CheckExistSeller(sellerUsername))
+                {
+                    rc.Success = false;
+                    rc.Message = "Seller not exist!";
+                }
+
+
+                int currentTimestamps = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                var groupId = Guid.NewGuid().ToString();
+                // var studentPayment = await dataContext.student.Where(x => x.student_id == studentId).ExecuteUpdateAsync(st => st.SetProperty(st => st.balance, st => st.balance - price).SetProperty(s => s.date_update, s => currentTimestamps));
+                // var sellerReceive = await dataContext.seller.Where(x => x.s_id == sellerId).ExecuteUpdateAsync(s => s.SetProperty(s => s.balance, s => s.balance + price).SetProperty(s => s.date_update, s => currentTimestamps));
+
+                var studentData = await dataContext.student.Where(s => s.student_id == studentId).FirstOrDefaultAsync();
+                var sellerData = await dataContext.seller.Where(s => s.username == sellerUsername).FirstOrDefaultAsync();
+
+                studentData.balance -= price;
+                studentData.date_update = currentTimestamps;
+
+                sellerData.balance += price;
+                sellerData.date_update = currentTimestamps;
+
+                var histories = new List<PayHistory>
+                {
+                  new PayHistory
+                  {
+                    transaction_id = groupId,
+                    student_id = studentId,
+                    seller = sellerData?.s_name,
+                    debit = price,
+                    credit = 0,
+                    remark = $"Payment to {sellerData?.s_name}",
+                    pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    user_update = studentData?.student_name,
+                    month_credit = string.Empty
+                  },
+                //   new PayHistory
+                //   {
+                //     transaction_id = groupId,
+                //     student_id = studentId,
+                //     seller = sellerData?.s_name,
+                //     debit = 0,
+                //     credit = price,
+                //     remark = "SELLER_PAYMENT_RECEIVED",
+                //     pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                //     user_update = sellerData?.s_name,
+                //     month_credit = string.Empty
+                // }
+                };
+
+                await dataContext.payhistory.AddRangeAsync(histories);
+                await dataContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                rc.Success = true;
+                rc.Message = "Transaction Successful!";
+                return rc;
+            }
+            catch (System.Exception)
+            {
+
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+        }
+
+        public async Task<bool> CheckExistStudent(string studentId)
+        {
+            var check = await dataContext.student.AnyAsync(x => x.student_id == studentId);
+            if (check)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> CheckExistSeller(string sellerUsername)
+        {
+            var check = await dataContext.seller.AnyAsync(x => x.username == sellerUsername);
+
+            if (check)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public async Task<bool> CheckStudentBalance(string studentId, decimal? price)
+        {
+            var check = await dataContext.student.FirstOrDefaultAsync(x => x.student_id == studentId);
+
+            if (check?.balance < price)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
 
     }
 }

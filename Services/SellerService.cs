@@ -605,44 +605,6 @@ namespace voucherMicroservice.Services
 
             return response;
         }
-
-        // public async Task<ResponseCustomModel<string>> RunCutover(string sellerName, long cutoverUnix)
-        // {
-        //     var result = new ResponseCustomModel<string>();
-
-        //     // Check if already done
-        //     var existing = await dataContext.sellerBalanceSnapshot
-        //         .AnyAsync(s => s.seller_name == sellerName);
-
-        //     if (existing)
-        //     {
-        //         result.Success = false;
-        //         result.Message = "Cutover already recorded for this seller.";
-        //         return result;
-        //     }
-
-        //     // Sum legacy income (single-entry rows = transaction_id is null/empty)
-        //     var legacyBalance = await dataContext.payhistory
-        //         .Where(p => p.seller == sellerName &&
-        //                     (p.transaction_id == null || p.transaction_id == "") &&
-        //                     p.pay_date <= cutoverUnix)
-        //         .SumAsync(p => p.debit ?? 0);
-
-        //     var snapshot = new SellerBalanceSnapshot
-        //     {
-        //         seller_name = sellerName,
-        //         legacy_balance = legacyBalance,
-        //         cutover_date = cutoverUnix,
-        //         created_at = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-        //     };
-
-        //     await dataContext.sellerBalanceSnapshot.AddAsync(snapshot);
-        //     await dataContext.SaveChangesAsync();
-
-        //     result.Success = true;
-        //     result.Message = $"Cutover complete. Legacy balance: RM {legacyBalance:F2}";
-        //     return result;
-        // }
     }
 
 }
