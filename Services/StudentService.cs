@@ -334,37 +334,42 @@ namespace voucherMicroservice.Services
                 {
                     rc.Success = false;
                     rc.Message = "Student not exist!";
+                    return rc;
                 }
-
-
-                if (!await CheckStudentBalance(studentId, price))
+                else
                 {
-                    rc.Success = false;
-                    rc.Message = "Insufficient Balance!";
-                }
+                    if (!await CheckExistSeller(sellerUsername))
+                    {
+                        rc.Success = false;
+                        rc.Message = "Seller not exist!";
+                        return rc;
+                    }
 
-                if (!await CheckExistSeller(sellerUsername))
-                {
-                    rc.Success = false;
-                    rc.Message = "Seller not exist!";
-                }
+                    else
+                    {
+                        if (!await CheckStudentBalance(studentId, price))
+                        {
+                            rc.Success = false;
+                            rc.Message = "Insufficient Balance!";
+                            return rc;
+                        }
+                        else
+                        {
+                            int currentTimestamps = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                            var groupId = Guid.NewGuid().ToString();
+                            // var studentPayment = await dataContext.student.Where(x => x.student_id == studentId).ExecuteUpdateAsync(st => st.SetProperty(st => st.balance, st => st.balance - price).SetProperty(s => s.date_update, s => currentTimestamps));
+                            // var sellerReceive = await dataContext.seller.Where(x => x.s_id == sellerId).ExecuteUpdateAsync(s => s.SetProperty(s => s.balance, s => s.balance + price).SetProperty(s => s.date_update, s => currentTimestamps));
 
+                            var studentData = await dataContext.student.Where(s => s.student_id == studentId).FirstOrDefaultAsync();
+                            var sellerData = await dataContext.seller.Where(s => s.username == sellerUsername).FirstOrDefaultAsync();
 
-                int currentTimestamps = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                var groupId = Guid.NewGuid().ToString();
-                // var studentPayment = await dataContext.student.Where(x => x.student_id == studentId).ExecuteUpdateAsync(st => st.SetProperty(st => st.balance, st => st.balance - price).SetProperty(s => s.date_update, s => currentTimestamps));
-                // var sellerReceive = await dataContext.seller.Where(x => x.s_id == sellerId).ExecuteUpdateAsync(s => s.SetProperty(s => s.balance, s => s.balance + price).SetProperty(s => s.date_update, s => currentTimestamps));
+                            studentData.balance -= price;
+                            studentData.date_update = currentTimestamps;
 
-                var studentData = await dataContext.student.Where(s => s.student_id == studentId).FirstOrDefaultAsync();
-                var sellerData = await dataContext.seller.Where(s => s.username == sellerUsername).FirstOrDefaultAsync();
+                            sellerData.balance += price;
+                            sellerData.date_update = currentTimestamps;
 
-                studentData.balance -= price;
-                studentData.date_update = currentTimestamps;
-
-                sellerData.balance += price;
-                sellerData.date_update = currentTimestamps;
-
-                var histories = new List<PayHistory>
+                            var histories = new List<PayHistory>
                 {
                   new PayHistory
                   {
@@ -392,12 +397,23 @@ namespace voucherMicroservice.Services
                 // }
                 };
 
-                await dataContext.payhistory.AddRangeAsync(histories);
-                await dataContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-                rc.Success = true;
-                rc.Message = "Transaction Successful!";
-                return rc;
+                            await dataContext.payhistory.AddRangeAsync(histories);
+                            await dataContext.SaveChangesAsync();
+                            await transaction.CommitAsync();
+                            rc.Success = true;
+                            rc.Message = "Transaction Successful!";
+                            return rc;
+                        }
+                    }
+                }
+
+
+
+
+
+
+
+
             }
             catch (System.Exception)
             {
