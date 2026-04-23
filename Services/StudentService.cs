@@ -349,8 +349,10 @@ namespace voucherMicroservice.Services
                     {
                         if (!await CheckStudentBalance(studentId, price))
                         {
+                            var check = await dataContext.student.FirstOrDefaultAsync(x => x.student_id == studentId);
+
                             rc.Success = false;
-                            rc.Message = "Insufficient Balance!";
+                            rc.Message = $"Insufficient Balance! Student balance only: RM {check?.balance}";
                             return rc;
                         }
                         else
