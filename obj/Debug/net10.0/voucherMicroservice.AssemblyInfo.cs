@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("voucherMicroservice")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2e81401b7c94177e4a530664bc2a44d89e8a7209")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ef827aeabf02fbfe85716f1ea07ebfaee1be23ca")]
 [assembly: System.Reflection.AssemblyProductAttribute("voucherMicroservice")]
 [assembly: System.Reflection.AssemblyTitleAttribute("voucherMicroservice")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
