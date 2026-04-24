@@ -28,7 +28,7 @@ namespace voucherMicroservice.Controller
         [HttpGet("/api/voucher/floating/paginated")]
         public async Task<IActionResult> GetFloatingPaginated([FromQuery] PaginationParams paginationParams, [FromQuery] string search = "")
         {
-            var result = await floatingService.GetFloatListPaginated(paginationParams);
+            var result = await floatingService.GetFloatListPaginated(paginationParams, search);
             Response.Headers.Add("X-Pagination",
             System.Text.Json.JsonSerializer.Serialize(result.Pagination));
             return Ok(result);
