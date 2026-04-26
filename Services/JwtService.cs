@@ -20,7 +20,7 @@ namespace voucherMicroservice.Services
             _config = config;
         }
 
-        public string GenerateToken(string userId, string name, string role, List<string> permissions)
+        public string GenerateToken(string userId, string name, string role, List<string> permissions, bool mustChangePassword)
         {
             var key = new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(_config["Jwt:SecretKey"]!));
@@ -33,7 +33,8 @@ namespace voucherMicroservice.Services
         new(JwtRegisteredClaimNames.Jti, jti),
         new("name",        name),
         new("role",        role),
-        new("permissions", System.Text.Json.JsonSerializer.Serialize(permissions)) // ← add
+        new("permissions", System.Text.Json.JsonSerializer.Serialize(permissions)), // ← add,
+        new("must_change_password", mustChangePassword.ToString().ToLower()),
     };
 
             var token = new JwtSecurityToken(

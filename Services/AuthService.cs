@@ -97,9 +97,10 @@ namespace voucherMicroservice.Services
 
             // ── Get permissions async ─────────
             var permissions = await _permissionService.GetUserPermissionsAsync(userId, role);
+            var mustChangePassword = false;
 
             // ── Generate JWT with permissions ─
-            var token = _jwtService.GenerateToken(userId, name, role, permissions);
+            var token = _jwtService.GenerateToken(userId, name, role, permissions, mustChangePassword);
             var jti = _jwtService.GetJti(token);
 
             // ── Log successful login ──────────
@@ -154,4 +155,6 @@ namespace voucherMicroservice.Services
         }
 
     }
+
+    
 }

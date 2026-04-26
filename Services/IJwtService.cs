@@ -11,7 +11,7 @@ namespace voucherMicroservice.Services
     {
         // string GenerateToken(string userId, UserRole role, SystemAccessLevel? accessLevel = null);
         // ClaimsPrincipal ValidateToken(string token);
-        string GenerateToken(string userId, string name, string role, List<string> permissions);
+        string GenerateToken(string userId, string name, string role, List<string> permissions, bool mustChangePassword);
         string GetJti(string token);
     }
 }

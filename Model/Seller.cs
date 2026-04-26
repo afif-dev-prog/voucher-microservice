@@ -18,6 +18,7 @@ namespace voucherMicroservice.Model
         public string firstTime { get; set; } = string.Empty;
         public int? last_password_change { get; set; } = 0;
         public string s_email { get; set; } = string.Empty;
+        public bool must_change_password { get; set; }
     }
 
     public class CreditDebitParam
