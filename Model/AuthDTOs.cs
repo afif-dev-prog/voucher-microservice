@@ -81,8 +81,6 @@ namespace voucherMicroservice.Model
 
         [Required]
         public UserRole UserType { get; set; }
-
-        [Required]
         public string TemporaryPassword { get; set; }
     }
 }
