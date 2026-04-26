@@ -357,7 +357,7 @@ namespace voucherMicroservice.Controller
                     .FirstOrDefaultAsync(s => s.student_id == request.UserId);
                 if (user == null) return NotFound(new { success = false, message = "Student not found." });
 
-                tempPassword = $"swk@{request.UserId}";
+                tempPassword = $"Skills@{request.UserId}";
                 hashed = BCrypt.Net.BCrypt.HashPassword(tempPassword);
                 user.password = hashed;
                 user.date_update = now;
@@ -381,7 +381,7 @@ namespace voucherMicroservice.Controller
                     .FirstOrDefaultAsync(s => s.staff_id == request.UserId);
                 if (user == null) return NotFound(new { success = false, message = "Staff not found." });
 
-                tempPassword = $"swk@{request.UserId}";
+                tempPassword = $"Skills@{request.UserId}";
                 hashed = BCrypt.Net.BCrypt.HashPassword(tempPassword);
                 user.password = hashed;
                 user.date_update = now;
