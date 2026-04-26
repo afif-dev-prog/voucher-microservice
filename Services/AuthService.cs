@@ -84,26 +84,34 @@ namespace voucherMicroservice.Services
 
         // ── Build success result ──────────────
         private async Task<AuthResult> BuildResult(
-            string userId, string name, string role, string status)
+        string userId, string name, string role, string status)
         {
             if (!status.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                return new AuthResult { Success = false, Message = "Account is inactive." };
+
+            var permissions = await _permissionService.GetUserPermissionsAsync(userId, role);
+
+            // ── Fetch must_change_password per user type ──
+            bool mustChangePassword = false;
+            if (role == "STUDENT")
             {
-                return new AuthResult
-                {
-                    Success = false,
-                    Message = "Account is inactive."
-                };
+                var student = await _dataContext.student.FirstOrDefaultAsync(s => s.student_id == userId);
+                mustChangePassword = student?.must_change_password ?? false;
+            }
+            else if (role == "SELLER")
+            {
+                var seller = await _dataContext.seller.FirstOrDefaultAsync(s => s.username == userId);
+                mustChangePassword = seller?.must_change_password ?? false;
+            }
+            else
+            {
+                var staff = await _dataContext.stafflist.FirstOrDefaultAsync(s => s.staff_id == userId);
+                mustChangePassword = staff?.must_change_password ?? false;
             }
 
-            // ── Get permissions async ─────────
-            var permissions = await _permissionService.GetUserPermissionsAsync(userId, role);
-            var mustChangePassword = false;
-
-            // ── Generate JWT with permissions ─
             var token = _jwtService.GenerateToken(userId, name, role, permissions, mustChangePassword);
             var jti = _jwtService.GetJti(token);
 
-            // ── Log successful login ──────────
             await LogAuthAsync(userId, role, "LOGIN", jti);
 
             return new AuthResult
@@ -111,13 +119,7 @@ namespace voucherMicroservice.Services
                 Success = true,
                 Message = "Login successful.",
                 Token = token,
-                UserInfo = new
-                {
-                    user_id = userId,
-                    name,
-                    role,
-                    permissions
-                }
+                UserInfo = new { user_id = userId, name, role, permissions }
             };
         }
 
@@ -156,5 +158,5 @@ namespace voucherMicroservice.Services
 
     }
 
-    
+
 }
