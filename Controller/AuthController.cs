@@ -393,6 +393,63 @@ namespace voucherMicroservice.Controller
                 temporary_password = tempPassword // show this to admin so they can inform user
             });
         }
+
+        [HttpPost("/api/voucher/auth/change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            if (request.NewPassword != request.ConfirmPassword)
+                return BadRequest(new { success = false, message = "Passwords do not match." });
+
+            var userId = User.FindFirst("sub")?.Value;
+            var role = User.FindFirst("role")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { success = false, message = "Invalid token." });
+
+            var newHashed = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+            if (role == "STUDENT")
+            {
+                var user = await _dataContext.student
+                    .FirstOrDefaultAsync(s => s.student_id == userId);
+                if (user == null)
+                    return NotFound(new { success = false, message = "User not found." });
+                if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.password))
+                    return BadRequest(new { success = false, message = "Current password is incorrect." });
+
+                user.password = newHashed;
+                user.must_change_password = false;
+            }
+            else if (role == "SELLER")
+            {
+                var user = await _dataContext.seller
+                    .FirstOrDefaultAsync(s => s.username == userId);
+                if (user == null)
+                    return NotFound(new { success = false, message = "User not found." });
+                if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.password))
+                    return BadRequest(new { success = false, message = "Current password is incorrect." });
+
+                user.password = newHashed;
+                user.must_change_password = false;
+            }
+            else
+            {
+                var user = await _dataContext.stafflist
+                    .FirstOrDefaultAsync(s => s.staff_id == userId);
+                if (user == null)
+                    return NotFound(new { success = false, message = "User not found." });
+                if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.password))
+                    return BadRequest(new { success = false, message = "Current password is incorrect." });
+
+                user.password = newHashed;
+                user.must_change_password = false;
+            }
+
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Password changed successfully." });
+        }
     }
 
 
