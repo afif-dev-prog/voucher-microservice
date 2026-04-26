@@ -32,6 +32,20 @@ namespace voucherMicroservice.Model
 
     }
 
+    public class CreateStudent
+    {
+        public string student_id { get; set; } = string.Empty;
+        public string student_name { get; set; } = string.Empty;
+        public string nric { get; set; } = string.Empty;
+        public string email { get; set; } = string.Empty;
+        public string password { get; set; } = string.Empty;
+        public int register_date { get; set; }
+        public int complete_date { get; set; }
+        public string intake { get; set; } = string.Empty;
+        public string course_code { get; set; } = string.Empty;
+        public string campus { get; set; } = string.Empty;
+    }
+
     public class UpdateStudent
     {
         public string student_name { get; set; } = string.Empty;
