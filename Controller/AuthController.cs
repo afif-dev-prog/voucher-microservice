@@ -401,8 +401,11 @@ namespace voucherMicroservice.Controller
             if (request.NewPassword != request.ConfirmPassword)
                 return BadRequest(new { success = false, message = "Passwords do not match." });
 
-            var userId = User.FindFirst("sub")?.Value;
-            var role = User.FindFirst("role")?.Value;
+            var userId = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value
+          ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            var role = User.FindFirst("role")?.Value
+                    ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
 
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized(new { success = false, message = "Invalid token." });
