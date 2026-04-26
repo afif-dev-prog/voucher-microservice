@@ -349,6 +349,7 @@ namespace voucherMicroservice.Controller
         {
             var tempPassword = "";
             var hashed = "";
+            var now = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             if (request.UserType == UserRole.Student)
             {
@@ -359,6 +360,7 @@ namespace voucherMicroservice.Controller
                 tempPassword = $"swk@{request.UserId}";
                 hashed = BCrypt.Net.BCrypt.HashPassword(tempPassword);
                 user.password = hashed;
+                user.date_update = now;
                 user.must_change_password = true; // add this column to your table
             }
             else if (request.UserType == UserRole.Seller)
@@ -370,6 +372,7 @@ namespace voucherMicroservice.Controller
                 tempPassword = $"swk@{request.UserId}";
                 hashed = BCrypt.Net.BCrypt.HashPassword(tempPassword);
                 user.password = hashed;
+                user.date_update = now;
                 user.must_change_password = true;
             }
             else
@@ -381,6 +384,7 @@ namespace voucherMicroservice.Controller
                 tempPassword = $"swk@{request.UserId}";
                 hashed = BCrypt.Net.BCrypt.HashPassword(tempPassword);
                 user.password = hashed;
+                user.date_update = now;
                 user.must_change_password = true;
             }
 
@@ -398,6 +402,8 @@ namespace voucherMicroservice.Controller
         [Authorize]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
+
+            var now = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             if (request.NewPassword != request.ConfirmPassword)
                 return BadRequest(new { success = false, message = "Passwords do not match." });
 
@@ -422,6 +428,7 @@ namespace voucherMicroservice.Controller
                     return BadRequest(new { success = false, message = "Current password is incorrect." });
 
                 user.password = newHashed;
+                user.date_update = now;
                 user.must_change_password = false;
             }
             else if (role == "SELLER")
@@ -434,6 +441,7 @@ namespace voucherMicroservice.Controller
                     return BadRequest(new { success = false, message = "Current password is incorrect." });
 
                 user.password = newHashed;
+                user.date_update = now;
                 user.must_change_password = false;
             }
             else
@@ -446,6 +454,7 @@ namespace voucherMicroservice.Controller
                     return BadRequest(new { success = false, message = "Current password is incorrect." });
 
                 user.password = newHashed;
+                user.date_update = now;
                 user.must_change_password = false;
             }
 
