@@ -58,6 +58,7 @@ namespace voucherMicroservice.Services
                 int currentTimestamp = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 studentRequest.balance = 0;
                 studentRequest.firstTime = "Yes";
+                studentRequest.must_change_password = true;
                 studentRequest.month_credit = "No data";
                 studentRequest.status = "Active";
                 studentRequest.last_password_change = 0;
@@ -79,6 +80,7 @@ namespace voucherMicroservice.Services
                     // batch = studentRequest.batch,
                     firstTime = studentRequest.firstTime,
                     status = studentRequest.status,
+                    must_change_password = studentRequest.must_change_password,
                     last_password_change = studentRequest.last_password_change,
                     date_update = currentTimestamp
                 };
