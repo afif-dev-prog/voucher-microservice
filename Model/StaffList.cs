@@ -34,5 +34,6 @@ namespace voucherMicroservice.Model
         public string firstTime { get; set; } = string.Empty;
         public int access_level { get; set; }
         public int last_password_change { get; set; }
+        public bool must_change_password { get; set; }
     }
 }

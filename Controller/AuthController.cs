@@ -344,5 +344,56 @@ namespace voucherMicroservice.Controller
                 message = $"{toKill.Count} session(s) terminated for {userId}."
             });
         }
+        [HttpPost("/api/voucher/auth/reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var tempPassword = "";
+            var hashed = "";
+
+            if (request.UserType == UserRole.Student)
+            {
+                var user = await _dataContext.student
+                    .FirstOrDefaultAsync(s => s.student_id == request.UserId);
+                if (user == null) return NotFound(new { success = false, message = "Student not found." });
+
+                tempPassword = $"swk@{request.UserId}";
+                hashed = BCrypt.Net.BCrypt.HashPassword(tempPassword);
+                user.password = hashed;
+                user.must_change_password = true; // add this column to your table
+            }
+            else if (request.UserType == UserRole.Seller)
+            {
+                var user = await _dataContext.seller
+                    .FirstOrDefaultAsync(s => s.username == request.UserId);
+                if (user == null) return NotFound(new { success = false, message = "Seller not found." });
+
+                tempPassword = $"swk@{request.UserId}";
+                hashed = BCrypt.Net.BCrypt.HashPassword(tempPassword);
+                user.password = hashed;
+                user.must_change_password = true;
+            }
+            else
+            {
+                var user = await _dataContext.stafflist
+                    .FirstOrDefaultAsync(s => s.staff_id == request.UserId);
+                if (user == null) return NotFound(new { success = false, message = "Staff not found." });
+
+                tempPassword = $"swk@{request.UserId}";
+                hashed = BCrypt.Net.BCrypt.HashPassword(tempPassword);
+                user.password = hashed;
+                user.must_change_password = true;
+            }
+
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Temporary password set. User must change password on next login.",
+                temporary_password = tempPassword // show this to admin so they can inform user
+            });
+        }
     }
+
+
 }
