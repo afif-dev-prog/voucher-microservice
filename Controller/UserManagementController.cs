@@ -19,13 +19,13 @@ namespace voucherMicroservice.Controller
         }
 
         [HttpPost("/api/voucher/usermanagement/addstudent")]
-        public async Task<IActionResult> AddNewStudent([FromBody] Student student)
+        public async Task<IActionResult> AddNewStudent([FromBody] CreateStudent student)
         {
             return Ok(await usermanagementService.CreateStudent(student));
         }
 
         [HttpPost("/api/voucher/usermanagement/addbulkstudent")]
-        public async Task<IActionResult> CreateBulkStudent([FromBody] List<Student> students)
+        public async Task<IActionResult> CreateBulkStudent([FromBody] List<CreateStudent> students)
         {
             return Ok(await usermanagementService.CreateStudentBulk(students));
         }
