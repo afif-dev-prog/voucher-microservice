@@ -369,7 +369,7 @@ namespace voucherMicroservice.Controller
                     .FirstOrDefaultAsync(s => s.username == request.UserId);
                 if (user == null) return NotFound(new { success = false, message = "Seller not found." });
 
-                tempPassword = $"swk@{request.UserId}";
+                tempPassword = $"Skills@{request.UserId}";
                 hashed = BCrypt.Net.BCrypt.HashPassword(tempPassword);
                 user.password = hashed;
                 user.date_update = now;
