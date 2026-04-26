@@ -88,6 +88,31 @@ if (!app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseAuthentication();
+
+// In Program.cs, after app.UseAuthentication()
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        var jti = context.User.FindFirst("jti")?.Value;
+        if (!string.IsNullOrEmpty(jti))
+        {
+            var db = context.RequestServices.GetRequiredService<DataContext>();
+            var isBlacklisted = await db.TokenBlacklist.AnyAsync(t => t.jti == jti);
+            if (isBlacklisted)
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    success = false,
+                    message = "Session terminated."
+                });
+                return;
+            }
+        }
+    }
+    await next();
+});
 app.UseAuthorization();
 app.UseHttpsRedirection();
 app.MapControllers();
