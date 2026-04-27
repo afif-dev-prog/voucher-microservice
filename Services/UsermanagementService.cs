@@ -330,9 +330,9 @@ namespace voucherMicroservice.Services
                             transaction_id = groupId,
                             student_id = studentId,
                             seller = sellerName,
-                            debit = wrongamount,
-                            credit = 0,
-                            remark = "WRONG_CREDIT_BY_FINANCE",
+                            debit = 0,
+                            credit = exactamount,
+                            remark = "EXACT_CREDIT_BY_FINANCE",
                             pay_date = ct,
                             user_update = sellerName,
                             month_credit = string.Empty
@@ -342,13 +342,14 @@ namespace voucherMicroservice.Services
                             transaction_id = groupId,
                             student_id = studentId,
                             seller = sellerName,
-                            debit = 0,
-                            credit = exactamount,
-                            remark = "EXACT_CREDIT_BY_FINANCE",
+                            debit = wrongamount,
+                            credit = 0,
+                            remark = "WRONG_CREDIT_BY_FINANCE",
                             pay_date = ct,
                             user_update = sellerName,
                             month_credit = string.Empty
                         }
+
                     };
                 await dataContext.payhistory.AddRangeAsync(histories);
                 await dataContext.SaveChangesAsync();
