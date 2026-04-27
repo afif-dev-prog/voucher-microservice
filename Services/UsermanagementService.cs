@@ -332,7 +332,19 @@ namespace voucherMicroservice.Services
                             seller = sellerName,
                             debit = exactamount,
                             credit = 0,
-                            remark = "WRONG_CREDIT_BY_SELLER",
+                            remark = "WRONG_CREDIT_BY_FINANCE",
+                            pay_date = ct,
+                            user_update = sellerName,
+                            month_credit = string.Empty
+                        },
+                        new PayHistory
+                        {
+                            transaction_id = groupId,
+                            student_id = studentId,
+                            seller = sellerName,
+                            debit = 0,
+                            credit = exactamount,
+                            remark = "EXACT_CREDIT_BY_FINANCE",
                             pay_date = ct,
                             user_update = sellerName,
                             month_credit = string.Empty
