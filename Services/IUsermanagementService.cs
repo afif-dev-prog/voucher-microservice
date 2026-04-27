@@ -14,5 +14,6 @@ namespace voucherMicroservice.Services
         Task<ResponseCustomModel<Student>> GetStudentById(string studentId);
         Task<ResponseCustomModel<string>> DeleteStudent(string studentId);
         Task<ResponseCustomModel<string>> WrongCreditBySeller(string studentId, decimal wrongamount, string sellerName, decimal exactamount);
+        Task<ResponseCustomModel<string>> WrongCreditByFinance(string studentId, decimal wrongamount, string sellerName, decimal exactamount);
     }
 }

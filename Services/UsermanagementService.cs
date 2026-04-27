@@ -276,15 +276,63 @@ namespace voucherMicroservice.Services
                             pay_date = ct,
                             user_update = sellerName,
                             month_credit = string.Empty
-                        },
+                        }
+                    };
+                await dataContext.payhistory.AddRangeAsync(histories);
+                await dataContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                response.Success = true;
+                response.Message = "Wrong credit corrected successfully!";
+
+
+                return response;
+            }
+            catch (System.Exception e)
+            {
+                await transaction.RollbackAsync();
+
+                response.Success = false;
+                response.Message = e.Message.ToString();
+                return response;
+                throw;
+            }
+
+
+        }
+        public async Task<ResponseCustomModel<string>> WrongCreditByFinance(string studentId, decimal wrongamount, string sellerName, decimal exactamount)
+        {
+            var response = new ResponseCustomModel<string>();
+            using var transaction = await dataContext.Database.BeginTransactionAsync();
+            int ct = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var groupId = Guid.NewGuid().ToString();
+
+            try
+            {
+                var checkExist = await dataContext.student.AnyAsync(x => x.student_id == studentId);
+                if (!checkExist)
+                {
+                    response.Message = "Student not found or wrong id!";
+                    response.Success = false;
+                    return response;
+                }
+
+
+                var studentData = await dataContext.student.Where(s => s.student_id == studentId)
+                    .ExecuteUpdateAsync(s => s
+                    .SetProperty(s => s.balance, s => s.balance - wrongamount + exactamount)
+                    .SetProperty(s => s.date_update, s => ct)
+                    );
+
+                var histories = new List<PayHistory>
+                    {
                         new PayHistory
                         {
                             transaction_id = groupId,
                             student_id = studentId,
                             seller = sellerName,
-                            debit = 0,
-                            credit = exactamount,
-                            remark = "CORRECT_CREDIT_BY_SELLER",
+                            debit = exactamount,
+                            credit = 0,
+                            remark = "WRONG_CREDIT_BY_SELLER",
                             pay_date = ct,
                             user_update = sellerName,
                             month_credit = string.Empty
