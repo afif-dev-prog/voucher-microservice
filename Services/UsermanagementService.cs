@@ -237,33 +237,39 @@ namespace voucherMicroservice.Services
             try
             {
                 var checkExist = await dataContext.student.AnyAsync(x => x.student_id == studentId);
+                var checkseller = await dataContext.seller.AnyAsync(x => x.s_name == sellerName);
+                // var studentName = "";
                 if (!checkExist)
                 {
                     response.Message = "Student not found or wrong id!";
                     response.Success = false;
                     return response;
                 }
-                var checkseller = await dataContext.seller.AnyAsync(x => x.s_name == sellerName);
-                if (!checkseller)
+                else
                 {
-                    response.Message = "Seller not found or wrong name!";
-                    response.Success = false;
-                    return response;
-                }
-
-                var studentData = await dataContext.student.Where(s => s.student_id == studentId)
+                    if (!checkseller)
+                    {
+                        response.Message = "Seller not found or wrong name!";
+                        response.Success = false;
+                        return response;
+                    }
+                    else
+                    {
+                        var studentData = await dataContext.student.Where(s => s.student_id == studentId)
                     .ExecuteUpdateAsync(s => s
                     .SetProperty(s => s.balance, s => s.balance + wrongamount - exactamount)
                     .SetProperty(s => s.date_update, s => ct)
                     );
 
-                var sellerData = await dataContext.seller.Where(s => s.s_name == sellerName)
-                    .ExecuteUpdateAsync(s => s
-                    .SetProperty(s => s.balance, s => s.balance - wrongamount + exactamount)
-                    .SetProperty(s => s.date_update, s => ct)
-                    );
+                        var studentName = await dataContext.student.FirstOrDefaultAsync(s => s.student_id == studentId);
 
-                var histories = new List<PayHistory>
+                        var sellerData = await dataContext.seller.Where(s => s.s_name == sellerName)
+                            .ExecuteUpdateAsync(s => s
+                            .SetProperty(s => s.balance, s => s.balance - wrongamount + exactamount)
+                            .SetProperty(s => s.date_update, s => ct)
+                            );
+
+                        var histories = new List<PayHistory>
                     {
                         new PayHistory
                         {
@@ -272,20 +278,37 @@ namespace voucherMicroservice.Services
                             seller = sellerName,
                             debit = exactamount,
                             credit = 0,
-                            remark = "WRONG_CREDIT_BY_SELLER",
+                            remark = "EXACT_DEBIT_TO_SELLER",
+                            pay_date = ct,
+                            user_update = studentName?.student_name,
+                            month_credit = string.Empty
+                        },
+                        new PayHistory
+                        {
+                            transaction_id = groupId,
+                            student_id = studentId,
+                            seller = sellerName,
+                            debit = 0,
+                            credit = wrongamount,
+                            remark = "WRONG_DEBIT_TO_SELLER",
                             pay_date = ct,
                             user_update = sellerName,
                             month_credit = string.Empty
                         }
                     };
-                await dataContext.payhistory.AddRangeAsync(histories);
-                await dataContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-                response.Success = true;
-                response.Message = "Wrong credit corrected successfully!";
+                        await dataContext.payhistory.AddRangeAsync(histories);
+                        await dataContext.SaveChangesAsync();
+                        await transaction.CommitAsync();
+                        response.Success = true;
+                        response.Message = "Wrong credit corrected successfully!";
 
 
-                return response;
+                        return response;
+                    }
+                }
+
+
+
             }
             catch (System.Exception e)
             {
