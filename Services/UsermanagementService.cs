@@ -73,7 +73,7 @@ namespace voucherMicroservice.Services
                     campus = studentRequest.campus,
                     // batch = studentRequest.batch,
                     firstTime = "Yes",
-                    status = "Yes",
+                    status = "Active",
                     must_change_password = true,
                     last_password_change = 0,
                     date_update = currentTimestamp
