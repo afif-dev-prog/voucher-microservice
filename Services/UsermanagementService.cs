@@ -330,7 +330,7 @@ namespace voucherMicroservice.Services
                             transaction_id = groupId,
                             student_id = studentId,
                             seller = sellerName,
-                            debit = exactamount,
+                            debit = wrongamount,
                             credit = 0,
                             remark = "WRONG_CREDIT_BY_FINANCE",
                             pay_date = ct,
