@@ -53,5 +53,10 @@ namespace voucherMicroservice.Controller
         {
             return Ok(await usermanagementService.WrongCreditBySeller(studentId, wrongamount, sellerName, exactamount));
         }
+        [HttpPost("/api/voucher/usermanagement/wrongcreditbyfinance")]
+        public async Task<IActionResult> WrongCreditByFinance(string studentId, decimal wrongamount, string sellerName, decimal exactamount)
+        {
+            return Ok(await usermanagementService.WrongCreditByFinance(studentId, wrongamount, sellerName, exactamount));
+        }
     }
 }
