@@ -47,6 +47,7 @@ builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IUsermanagementService, UsermanagementService>();
 builder.Services.AddScoped<IDuplicateSolverService, DuplicateEntrySolverService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IWebPushService, WebPushService>();
 builder.Services.AddHttpContextAccessor();
 
 //JWT Auth

@@ -13,9 +13,11 @@ namespace voucherMicroservice.Controller
     public class UserManagementController : ControllerBase
     {
         private readonly IUsermanagementService usermanagementService;
-        public UserManagementController(IUsermanagementService usermanagementService)
+        private readonly IWebPushService webPush;
+        public UserManagementController(IUsermanagementService usermanagementService, IWebPushService webPush)
         {
             this.usermanagementService = usermanagementService;
+            this.webPush = webPush;
         }
 
         [HttpPost("/api/voucher/usermanagement/addstudent")]
@@ -57,6 +59,12 @@ namespace voucherMicroservice.Controller
         public async Task<IActionResult> WrongCreditByFinance(string studentId, decimal wrongamount, string sellerName, decimal exactamount)
         {
             return Ok(await usermanagementService.WrongCreditByFinance(studentId, wrongamount, sellerName, exactamount));
+        }
+
+        [HttpGet("/api/voucher/usermanagement/getvapidkey")]
+        public async Task<IActionResult> GetVapidKey()
+        {
+            return Ok(await webPush.GetVapidKeys());
         }
     }
 }
