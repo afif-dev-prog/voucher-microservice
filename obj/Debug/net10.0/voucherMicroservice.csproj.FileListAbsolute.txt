@@ -132,3 +132,6 @@
 /home/afifjazimin/Document/DotnetCore/voucherMicroservice/bin/Debug/net10.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 /home/afifjazimin/Document/DotnetCore/voucherMicroservice/bin/Debug/net10.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 /home/afifjazimin/Document/DotnetCore/voucherMicroservice/obj/Debug/net10.0/voucherMicroservice.sourcelink.json
+/home/afifjazimin/Document/DotnetCore/voucherMicroservice/bin/Debug/net10.0/Newtonsoft.Json.dll
+/home/afifjazimin/Document/DotnetCore/voucherMicroservice/bin/Debug/net10.0/BouncyCastle.Crypto.dll
+/home/afifjazimin/Document/DotnetCore/voucherMicroservice/bin/Debug/net10.0/WebPush.dll
