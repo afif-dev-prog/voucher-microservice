@@ -26,6 +26,8 @@ namespace voucherMicroservice.Data
         public DbSet<SellerBalanceSnapshot> sellerBalanceSnapshot { get; set; }
         public DbSet<StudentPushSubscription> push_subscription { get; set; }
         public DbSet<PendingPayment> pending_payments { get; set; }
+        public DbSet<Notifications> notifications { get; set; }
+        public DbSet<Announcement> announcements { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
