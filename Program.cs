@@ -93,6 +93,9 @@ app.UseCors(x => x
             .AllowCredentials());
 app.UseSwagger();
 app.UseSwaggerUI();
+// Add this before builder.Services.AddAuthentication(...)
+System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler
+    .DefaultInboundClaimTypeMap.Clear();
 app.UseAuthentication();
 
 // In Program.cs, after app.UseAuthentication()

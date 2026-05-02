@@ -15,14 +15,16 @@ namespace voucherMicroservice.Services
         private readonly ResponseCustomModel<List<PayHistory>> rcL;
         private readonly ResponseCustomModel<PayHistory> rcP;
         private readonly ILogger<StudentService> _logger;
+        private readonly IWebPushService webPushService;
 
-        public StudentService(DataContext dataContext, ResponseCustomModel<string> rc, ResponseCustomModel<List<PayHistory>> rcL, ResponseCustomModel<PayHistory> rcP, ILogger<StudentService> logger)
+        public StudentService(DataContext dataContext, ResponseCustomModel<string> rc, ResponseCustomModel<List<PayHistory>> rcL, ResponseCustomModel<PayHistory> rcP, ILogger<StudentService> logger, IWebPushService webPushService)
         {
             this.dataContext = dataContext;
             this.rc = rc;
             this.rcL = rcL;
             this.rcP = rcP;
             this._logger = logger;
+            this.webPushService = webPushService;
         }
 
         public async Task<List<Student>> GetStudentsAsync()
@@ -372,36 +374,51 @@ namespace voucherMicroservice.Services
                             sellerData.date_update = currentTimestamps;
 
                             var histories = new List<PayHistory>
-                {
-                  new PayHistory
-                  {
-                    transaction_id = groupId,
-                    student_id = studentId,
-                    seller = sellerData?.s_name,
-                    debit = price,
-                    credit = 0,
-                    remark = $"Payment to {sellerData?.s_name}",
-                    pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                    user_update = studentData?.student_name,
-                    month_credit = string.Empty
-                  },
-                //   new PayHistory
-                //   {
-                //     transaction_id = groupId,
-                //     student_id = studentId,
-                //     seller = sellerData?.s_name,
-                //     debit = 0,
-                //     credit = price,
-                //     remark = "SELLER_PAYMENT_RECEIVED",
-                //     pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                //     user_update = sellerData?.s_name,
-                //     month_credit = string.Empty
-                // }
-                };
+                            {
+                                new PayHistory
+                                {
+                                    transaction_id = groupId,
+                                    student_id = studentId,
+                                    seller = sellerData?.s_name,
+                                    debit = price,
+                                    credit = 0,
+                                    remark = $"Payment to {sellerData?.s_name}",
+                                    pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                                    user_update = studentData?.student_name,
+                                    month_credit = string.Empty
+                                },
+                                //   new PayHistory
+                                //   {
+                                //     transaction_id = groupId,
+                                //     student_id = studentId,
+                                //     seller = sellerData?.s_name,
+                                //     debit = 0,
+                                //     credit = price,
+                                //     remark = "SELLER_PAYMENT_RECEIVED",
+                                //     pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                                //     user_update = sellerData?.s_name,
+                                //     month_credit = string.Empty
+                                // }
+                            };
 
                             await dataContext.payhistory.AddRangeAsync(histories);
                             await dataContext.SaveChangesAsync();
                             await transaction.CommitAsync();
+                            // // Notify student
+                            await webPushService.SendToUser(
+                                studentId,
+                                "Payment Successful",
+                                $"RM {price:F2} paid to {sellerUsername}.",
+                                "PAYMENT_DEDUCTED"
+                            );
+
+                            // Notify seller
+                            await webPushService.SendToUser(
+                               sellerUsername,
+                                "Payment Received",
+                                $"RM {price:F2} received.",
+                                "PAYMENT_RECEIVED"
+                            );
                             rc.Success = true;
                             rc.Message = "Transaction Successful!";
                             return rc;

@@ -17,8 +17,9 @@ namespace voucherMicroservice.Services
         private readonly IPayHistoryService payHistoryService;
         private readonly IPasswordService passwordService;
         private readonly ILogger<SellerService> logger;
+        private readonly IWebPushService webPushService;
 
-        public SellerService(DataContext dataContext, ResponseCustomModel<string> rc, ResponseCustomModel<List<Seller>> rcL, IPayHistoryService payHistoryService, ResponseCustomModel<List<PayHistory>> rcP, ILogger<SellerService> logger, IPasswordService passwordService)
+        public SellerService(DataContext dataContext, ResponseCustomModel<string> rc, ResponseCustomModel<List<Seller>> rcL, IPayHistoryService payHistoryService, ResponseCustomModel<List<PayHistory>> rcP, ILogger<SellerService> logger, IPasswordService passwordService, IWebPushService webPushService)
         {
             this.dataContext = dataContext;
             this.rc = rc;
@@ -27,6 +28,7 @@ namespace voucherMicroservice.Services
             this.payHistoryService = payHistoryService;
             this.logger = logger;
             this.passwordService = passwordService;
+            this.webPushService = webPushService;
         }
 
         public async Task<List<Seller>> GetSellerList()
@@ -70,7 +72,8 @@ namespace voucherMicroservice.Services
         {
 
             using var transaction = await dataContext.Database.BeginTransactionAsync();
-
+            var studentData = await dataContext.student.Where(s => s.student_id == studentId).FirstOrDefaultAsync();
+            var sellerData = await dataContext.seller.Where(s => s.s_id == sellerId).FirstOrDefaultAsync();
             try
             {
                 if (!await CheckExistStudent(studentId))
@@ -98,8 +101,7 @@ namespace voucherMicroservice.Services
                         // var studentPayment = await dataContext.student.Where(x => x.student_id == studentId).ExecuteUpdateAsync(st => st.SetProperty(st => st.balance, st => st.balance - price).SetProperty(s => s.date_update, s => currentTimestamps));
                         // var sellerReceive = await dataContext.seller.Where(x => x.s_id == sellerId).ExecuteUpdateAsync(s => s.SetProperty(s => s.balance, s => s.balance + price).SetProperty(s => s.date_update, s => currentTimestamps));
 
-                        var studentData = await dataContext.student.Where(s => s.student_id == studentId).FirstOrDefaultAsync();
-                        var sellerData = await dataContext.seller.Where(s => s.s_id == sellerId).FirstOrDefaultAsync();
+
 
                         studentData.balance -= price;
                         studentData.date_update = currentTimestamps;
@@ -108,41 +110,62 @@ namespace voucherMicroservice.Services
                         sellerData.date_update = currentTimestamps;
 
                         var histories = new List<PayHistory>
-                {
-                  new PayHistory
-                  {
-                    transaction_id = groupId,
-                    student_id = studentId,
-                    seller = sellerData?.s_name,
-                    debit = price,
-                    credit = 0,
-                    remark = $"Payment to {sellerData?.s_name}",
-                    pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                    user_update = studentData?.student_name,
-                    month_credit = string.Empty
-                  },
-                //   new PayHistory
-                //   {
-                //     transaction_id = groupId,
-                //     student_id = studentId,
-                //     seller = sellerData?.s_name,
-                //     debit = 0,
-                //     credit = price,
-                //     remark = "SELLER_PAYMENT_RECEIVED",
-                //     pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                //     user_update = sellerData?.s_name,
-                //     month_credit = string.Empty
-                // }
-                };
+                        {
+                        new PayHistory
+                        {
+                            transaction_id = groupId,
+                            student_id = studentId,
+                            seller = sellerData?.s_name,
+                            debit = price,
+                            credit = 0,
+                            remark = $"Payment to {sellerData?.s_name}",
+                            pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                            user_update = studentData?.student_name,
+                            month_credit = string.Empty
+                        },
+                        //   new PayHistory
+                        //   {
+                        //     transaction_id = groupId,
+                        //     student_id = studentId,
+                        //     seller = sellerData?.s_name,
+                        //     debit = 0,
+                        //     credit = price,
+                        //     remark = "SELLER_PAYMENT_RECEIVED",
+                        //     pay_date = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                        //     user_update = sellerData?.s_name,
+                        //     month_credit = string.Empty
+                        // }
+                        };
 
                         await dataContext.payhistory.AddRangeAsync(histories);
                         await dataContext.SaveChangesAsync();
                         await transaction.CommitAsync();
+
+
+
+                        var paymentId = Guid.NewGuid().ToString();
+                        await webPushService.SendToUser(
+                                            studentId,
+                                            "Payment Successful",
+                                            $"RM {price:F2} paid to {sellerData.s_name}. Check your balance.",
+                                            "PAYMENT_DEDUCTED",
+                                            paymentId
+                                        );
+
+                        // // Notify seller — money received
+                        await webPushService.SendToUser(
+                            sellerData.username,
+                            "Payment Received",
+                            $"RM {price:F2} received from student {studentId}.",
+                            "PAYMENT_RECEIVED",
+                            paymentId
+                        );
                         rc.Success = true;
                         rc.Message = "Transaction Successful!";
                         return rc;
                     }
                 }
+
             }
             catch (System.Exception)
             {

@@ -10,5 +10,6 @@ namespace voucherMicroservice.Model
         public string Endpoint { get; set; } = string.Empty;
         public string P256dh { get; set; } = string.Empty;
         public string Auth { get; set; } = string.Empty;
+        public string StudentId { get; set; } = string.Empty;
     }
 }
