@@ -16,9 +16,9 @@ namespace voucherMicroservice.Model
         public string seller_username { get; set; } = string.Empty;
         public string seller_name { get; set; } = string.Empty;
         public decimal amount { get; set; }
-        public string status { get; set; } = "pending"; // pending/approved/rejected/expired
+        public string status { get; set; } = "pending";
         public long created_at { get; set; }
         public long? resolved_at { get; set; }
-        public long expires_at { get; set; } // 60 seconds expiry
+        public long expires_at { get; set; }
     }
 }
