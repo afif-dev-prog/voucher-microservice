@@ -30,7 +30,7 @@ namespace voucherMicroservice.Controller
         }
         // Student subscribes to push notifications
         [HttpPost("/api/voucher/payment/subscribe")]
-        // [Authorize]
+        [Authorize]
         public async Task<IActionResult> Subscribe([FromBody] PushSubscriptionRequest req)
         {
             var studentId = req?.StudentId;
@@ -77,7 +77,7 @@ namespace voucherMicroservice.Controller
 
         // Seller initiates payment request
         [HttpPost("/api/voucher/payment/initiate")]
-        // [Authorize]
+        [Authorize]
         public async Task<IActionResult> InitiatePayment([FromBody] InitiatePaymentRequest req)
         {
             // Debug — check what's coming in
@@ -152,7 +152,7 @@ namespace voucherMicroservice.Controller
 
         // Check payment status (seller polls this)
         [HttpGet("/api/voucher/payment/status/{paymentId}")]
-        // [Authorize]
+        [Authorize]
         public async Task<IActionResult> GetStatus(string paymentId)
         {
             var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -188,7 +188,7 @@ namespace voucherMicroservice.Controller
 
         // Student approves payment
         [HttpPost("/api/voucher/payment/approve/{paymentId}")]
-        // [Authorize]
+        [Authorize]
         public async Task<IActionResult> Approve([FromBody] string studentId, string paymentId)
         {
             var student_id = studentId;
@@ -308,7 +308,7 @@ namespace voucherMicroservice.Controller
 
         // Student rejects payment
         [HttpPost("/api/voucher/payment/reject/{paymentId}")]
-        // [Authorize]
+        [Authorize]
         public async Task<IActionResult> Reject([FromBody] string studentId, string paymentId)
         {
             var student_id = studentId;
